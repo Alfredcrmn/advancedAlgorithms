@@ -1,54 +1,72 @@
+import random, math
 import matplotlib.pyplot as plt
-import numpy as np
-import random
 
+def distancia(a, b):
+    return math.hypot(a[0]-b[0], a[1]-b[1])
 
+def longitud_trazo(puntos, orden):
+    s = 0.0
+    for k in range(len(orden)-1):
+        s += distancia(puntos[orden[k]], puntos[orden[k+1]])
+    return s
 
-num_points = 50
-points = [(random.randint(0, 200), random.randint(0, 200)) for _ in range(num_points)]
-print("Lista de 50 puntos aleatorios:")
-print(points)
+def min_trazo(puntos, iter_max=50000, semilla=42):
+    random.seed(semilla)
+    n = len(puntos)
+    orden = list(range(n))
+    L = longitud_trazo(puntos, orden)
+    for _ in range(iter_max):
+        i = random.randrange(n)
+        j = random.randrange(n)
+        if i == j:
+            continue
+        if i > j:
+            i, j = j, i
+        orden[i], orden[j] = orden[j], orden[i]
+        L2 = longitud_trazo(puntos, orden)
+        if L2 >= L:
+            orden[i], orden[j] = orden[j], orden[i]
+        else:
+            L = L2
+    return orden, L
 
+def graficar(puntos, orden, titulo):
+    xs = [puntos[i][0] for i in orden]
+    ys = [puntos[i][1] for i in orden]
+    plt.plot(xs, ys, marker='o')
+    plt.title(titulo)
+    plt.axis('equal')
 
-def distance(p1, p2):
-    return np.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2) # Fórmula de Pitágoras entre p1 y p2
+puntos = [
+    (20,20),(20,40),(20,160),(30,120),(40,140),(40,150),(50,20),
+    (60,40),(60,80),(60,200),(70,200),(80,150),(90,170),(90,170),
+    (100,50),(100,40),(100,130),(100,150),(110,10),(110,70),
+    (120,80),(130,70),(130,170),(140,140),(140,180),(150,50),
+    (160,20),(170,100),(180,70),(180,200),(200,30),(200,70),(200,100)
+]
 
-def nearest_neighbor(points):
-    # Inicialización
-    unvisited = points.copy()  # Copia de todos los puntos, inicialmente todos sin visitar
-    path = []  # Lista donde se guardará el recorrido
-    total_distance = 0  # Acumulador de la distancia recorrida
-    current_point = unvisited.pop(0)  # Se inicia desde el primer punto de la lista
-    path.append(current_point)  # Se agrega el primer punto al recorrido
+orden_inicial = list(range(len(puntos)))
+L_ini = longitud_trazo(puntos, orden_inicial)
+orden_final, L_fin = min_trazo(puntos, iter_max=80000, semilla=7)
 
-    # Mientras queden puntos sin visitar
-    while unvisited:
-        # Buscar el punto más cercano al actual
-        nearest_point = min(unvisited, key=lambda p: distance(current_point, p))
-        unvisited.remove(nearest_point)  # Eliminarlo de la lista de no visitados
-        path.append(nearest_point)  # Agregarlo al recorrido
-        total_distance += distance(current_point, nearest_point)  # Sumar la distancia recorrida
-        current_point = nearest_point  # Actualizar el punto actual
+plt.figure(figsize=(10,4))
+plt.subplot(1,2,1)
+graficar(puntos, orden_inicial, f"Original: Inicial  L={L_ini:.1f}")
+plt.subplot(1,2,2)
+graficar(puntos, orden_final, f"Original: Greedy (2-swap)  L={L_fin:.1f}")
+plt.tight_layout()
+plt.show()
 
-    # Regresar al punto inicial para cerrar el ciclo
-    total_distance += distance(current_point, path[0])
+random.seed(123)
+p50 = [(random.randint(0,300), random.randint(0,300)) for _ in range(50)]
+orden_inicial2 = list(range(len(p50)))
+L_ini2 = longitud_trazo(p50, orden_inicial2)
+orden_final2, L_fin2 = min_trazo(p50, iter_max=120000, semilla=9)
 
-    return path, total_distance # Regresa el recorrido completo y la distancia total
-
-path, total_distance = nearest_neighbor(points)
-
-# Graficar un recorrido
-def plot_path(path, title):
-    x, y = zip(*path)  # Separar coordenadas X y Y
-    plt.figure(figsize=(8, 6))
-    plt.plot(x, y, marker='o', linestyle='-', color='b')  # Dibujar el trazo entre puntos
-    plt.scatter(x, y, color='r')
-    plt.title(title)
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.grid(True)
-    plt.show()
-
-plot_path(path, "Recorrido Inicial (Algoritmo Avaro)")
-
-print(f"Distancia total recorrida: {total_distance}")
+plt.figure(figsize=(10,4))
+plt.subplot(1,2,1)
+graficar(p50, orden_inicial2, f"Nuevos (50 pts): Inicial  L={L_ini2:.1f}")
+plt.subplot(1,2,2)
+graficar(p50, orden_final2, f"Nuevos (50 pts): Greedy (2-swap)  L={L_fin2:.1f}")
+plt.tight_layout()
+plt.show()
