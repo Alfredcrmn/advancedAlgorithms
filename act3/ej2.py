@@ -7,17 +7,17 @@ def mochila_bt(valores, pesos, capacidad):
     sel = []
     def f(i, v, w):
         nonlocal mejor_valor, mejor_sel
-        if w > capacidad:
+        if w > capacidad: # Si el peso acumulado excede la capacidad, se detiene y la rama no es válida
             return
         if i == n:
             if v > mejor_valor:
-                mejor_valor = v
+                mejor_valor = v # Se compara el valor acumulado con el mejor encontrado hasta ahora
                 mejor_sel = sel[:]
-            return
+            return # Se termina la rama
         sel.append(i)
-        f(i+1, v + valores[i], w + pesos[i])
+        f(i+1, v + valores[i], w + pesos[i]) # Se añade el valor y el peso de i
         sel.pop()
-        f(i+1, v, w)
+        f(i+1, v, w) # No se añade valor ni peso
     f(0, 0, 0)
     return mejor_valor, mejor_sel
 
