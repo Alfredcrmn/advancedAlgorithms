@@ -2,9 +2,9 @@ import random, time
 
 def mochila_bt_poda(valores, pesos, capacidad):
     n = len(valores)
-    indices = list(range(n))
-    razones = [valores[i]/pesos[i] for i in range(n)]
-    indices.sort(key=lambda i: razones[i], reverse=True)
+    indices = list(range(n)) # Crea los índices
+    razones = [valores[i]/pesos[i] for i in range(n)] # Calcula el valor - peso de cada objeto
+    indices.sort(key=lambda i: razones[i], reverse=True) # Los ordena de mayor a menor
     valores = [valores[i] for i in indices]
     pesos = [pesos[i] for i in indices]
 
@@ -27,14 +27,14 @@ def mochila_bt_poda(valores, pesos, capacidad):
 
     def f(i, v, w):
         nonlocal mejor_valor, mejor_sel
-        if w > capacidad:
+        if w > capacidad: # Si supera la capacidad se detiene esta rama
             return
         if i == n:
-            if v > mejor_valor:
+            if v > mejor_valor: # Si el valor v supera el mejor encontrado, actualiza mejor solución
                 mejor_valor = v
                 mejor_sel = sel[:]
             return
-        if calcular_cota(i, v, w) <= mejor_valor:
+        if calcular_cota(i, v, w) <= mejor_valor: # Si ni el mejor caso teórico puede superar mejor_valor, se termina aquí
             return
         sel.append(i)
         f(i+1, v + valores[i], w + pesos[i])
