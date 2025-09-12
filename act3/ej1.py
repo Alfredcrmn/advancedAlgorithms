@@ -2,25 +2,25 @@ import random, time
 
 def mochila_dc(valores, pesos, capacidad):
     n = len(valores)
-    def f(i, cap):
+    def f(i, cap): # Sin objetos o peso disponible, el mejor valor es 0
         if i == 0 or cap == 0:
             return 0
-        if pesos[i-1] > cap:
+        if pesos[i-1] > cap: # Si el peso del objeto actual no cabe, no se toma
             return f(i-1, cap)
-        a = f(i-1, cap)
-        b = valores[i-1] + f(i-1, cap - pesos[i-1])
-        return a if a >= b else b
+        a = f(i-1, cap) # No tomar el objeto
+        b = valores[i-1] + f(i-1, cap - pesos[i-1]) # Tomarlo y sumar su valor
+        return a if a >= b else b # devuelve el máximo de las decisiones
     return f(n, capacidad)
 
 def mochila_dp(valores, pesos, capacidad):
     n = len(valores)
     dp = [0]*(capacidad+1)
-    for i in range(n):
+    for i in range(n): # Se extra el peso y valor de cada objeto
         p = pesos[i]
         v = valores[i]
-        for cap in range(capacidad, p-1, -1):
-            s = dp[cap]
-            c = dp[cap-p] + v
+        for cap in range(capacidad, p-1, -1): # Recorre las capacidades de mayor a menor
+            s = dp[cap] # Valor si no se toma el objeto
+            c = dp[cap-p] + v # Valor si se toma el objeto
             dp[cap] = c if c > s else s
     return dp[capacidad]
 
