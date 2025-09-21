@@ -2,46 +2,49 @@ import random, time
 
 def mochila_bt_poda(valores, pesos, capacidad):
     n = len(valores)
-    indices = list(range(n)) # Crea los índices
-    razones = [valores[i]/pesos[i] for i in range(n)] # Calcula el valor - peso de cada objeto
-    indices.sort(key=lambda i: razones[i], reverse=True) # Los ordena de mayor a menor
-    valores = [valores[i] for i in indices]
-    pesos = [pesos[i] for i in indices]
+    indices = list(range(n))
+    razones = [valores[i]/pesos[i] for i in range(n)]
+    indices.sort(key=lambda i: razones[i], reverse=True)
+    val = [valores[i] for i in indices]
+    pes = [pesos[i] for i in indices]
 
     mejor_valor = 0
     mejor_sel = []
     sel = []
 
-    def calcular_cota(i, v, w):
+    def cota(i, v, w):
         if w >= capacidad:
-            return 0
+            return v
         c = v
-        cap_rest = capacidad - w
-        while i < n and pesos[i] <= cap_rest:
-            cap_rest -= pesos[i]
-            c += valores[i]
-            i += 1
-        if i < n:
-            c += valores[i] * cap_rest / pesos[i]
+        cap = capacidad - w
+        j = i
+        while j < n and pes[j] <= cap:
+            cap -= pes[j]
+            c += val[j]
+            j += 1
+        if j < n:
+            c += val[j] * cap / pes[j]
         return c
 
     def f(i, v, w):
         nonlocal mejor_valor, mejor_sel
-        if w > capacidad: # Si supera la capacidad se detiene esta rama
+        if w > capacidad:
             return
-        if i == n:
-            if v > mejor_valor: # Si el valor v supera el mejor encontrado, actualiza mejor solución
+        if w == capacidad or i == n:
+            if v > mejor_valor:
                 mejor_valor = v
                 mejor_sel = sel[:]
             return
-        if calcular_cota(i, v, w) <= mejor_valor: # Si ni el mejor caso teórico puede superar mejor_valor, se termina aquí
+        if cota(i, v, w) <= mejor_valor:
             return
         sel.append(i)
-        f(i+1, v + valores[i], w + pesos[i])
+        f(i+1, v + val[i], w + pes[i])
         sel.pop()
         f(i+1, v, w)
+
     f(0, 0, 0)
     return mejor_valor, [indices[i] for i in mejor_sel]
+
 
 random.seed(123)
 
