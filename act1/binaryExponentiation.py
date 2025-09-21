@@ -13,7 +13,7 @@ def binaryExp(a, b):
     
     return result
 
-for i in range(10):
+for i in range(20):
     a = random.randint(1, 10)
     b = random.randint(1, 20)
     custom = binaryExp(a, b)
@@ -21,6 +21,6 @@ for i in range(10):
     
     print(f"Test {i+1}:\n"
           f"{a}^{b}\n"
-          f"binaryExp={custom:.3f}\n"
-          f"pow={builtin:.3f}\n"
-          f"OK? {round(custom,3) == round(builtin,3)}\n")
+          f"binaryExp={custom}\n"
+          f"pow={builtin}\n"
+          f"OK? {custom == builtin}\n")
