@@ -13,12 +13,11 @@ def binaryExp(a, b):
     
     return result
 
-# === Casos de prueba aleatorios ===
-for i in range(10):  # Genera 10 casos
+for i in range(10):
     a = random.randint(1, 10)
     b = random.randint(1, 20)
     custom = binaryExp(a, b)
-    builtin = pow(a, b)  # mantiene float
+    builtin = pow(a, b)
     
     print(f"Test {i+1}:\n"
           f"{a}^{b}\n"
