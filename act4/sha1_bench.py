@@ -1,8 +1,7 @@
 # sha1_bench.py
-# Benchmark de SHA-1 "from scratch" con 200,000 strings aleatorios (4-8, a-z)
+# Benchmark de SHA-1 "from scratch" con 200,000 strings aleatorios (4-8, a-z,0-9)
 # - Tiempo total de hashing
 # - Número de colisiones (hash iguales con strings distintos)
-# - Número de duplicados exactos (mismo string repetido)
 
 import random
 import time
@@ -14,11 +13,7 @@ def _rol(x: int, n: int) -> int:
     return ((x << n) | (x >> (32 - n))) & 0xFFFFFFFF
 
 def sha1_bytes(msg: bytes) -> bytes:
-    h0 = 0x67452301
-    h1 = 0xEFCDAB89
-    h2 = 0x98BADCFE
-    h3 = 0x10325476
-    h4 = 0xC3D2E1F0
+    h0, h1, h2, h3, h4 = 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0
 
     ml = len(msg) * 8
     msg += b"\x80"
@@ -62,33 +57,30 @@ def sha1_bytes(msg: bytes) -> bytes:
 def sha1_hex(s: str) -> str:
     return sha1_bytes(s.encode("utf-8")).hex()
 
-# ----------------- Generación de strings aleatorios -----------------
+# ----------------- Generación de strings aleatorios únicos -----------------
 
-def generate_random_strings(n: int, characters: str = "abcdefghijklmnopqrstuvwxyz") -> list[str]:
+def generate_unique_strings(n: int, characters: str = "abcdefghijklmnopqrstuvwxyz0123456789") -> list[str]:
     """
-    Genera n cadenas aleatorias con longitud entre 4 y 8, usando 'characters'.
+    Genera n cadenas únicas de longitud entre 4 y 8, usando 'characters'.
     """
+    seen = set()
     out = []
-    # Fija la semilla para reproducibilidad (opcional). Comenta esta línea si no la quieres.
     random.seed(42)
-    for _ in range(n):
+    while len(out) < n:
         length = random.randint(4, 8)
         s = "".join(random.choice(characters) for _ in range(length))
-        out.append(s)
+        if s not in seen:
+            seen.add(s)
+            out.append(s)
     return out
 
 # ----------------- Benchmark -----------------
 
 def benchmark_sha1(strings: Iterable[str]):
-    """
-    Calcula hashes SHA-1 para 'strings' y cuenta colisiones y duplicados.
-    Retorna (tiempo_seg, colisiones, duplicados, distintos, total).
-    """
     start = time.perf_counter()
 
     seen_hash_to_str: dict[str, str] = {}
     collisions = 0
-    duplicates = 0
     total = 0
 
     for s in strings:
@@ -96,10 +88,7 @@ def benchmark_sha1(strings: Iterable[str]):
         h = sha1_hex(s)
 
         if h in seen_hash_to_str:
-            if seen_hash_to_str[h] == s:
-                # mismo string repetido (duplicado exacto)
-                duplicates += 1
-            else:
+            if seen_hash_to_str[h] != s:
                 # hash igual pero string diferente -> colisión
                 collisions += 1
         else:
@@ -107,22 +96,21 @@ def benchmark_sha1(strings: Iterable[str]):
 
     elapsed = time.perf_counter() - start
     distinct = len(seen_hash_to_str)
-    return elapsed, collisions, duplicates, distinct, total
+    return elapsed, collisions, distinct, total
 
 # ----------------- Main -----------------
 
 if __name__ == "__main__":
     N = 200_000
-    print(f"Generando {N} strings aleatorios (a-z, long 4-8)...")
-    st = generate_random_strings(N)
+    print(f"Generando {N} strings aleatorios únicos (a-z0-9, long 4-8)...")
+    st = generate_unique_strings(N)
 
     print("Ejecutando benchmark SHA-1 (implementación propia)...")
-    t, col, dup, distinct, total = benchmark_sha1(st)
+    t, col, distinct, total = benchmark_sha1(st)
 
     print("\n===== Resultados =====")
     print(f"Total de strings:        {total:,}")
     print(f"Strings distintos:       {distinct:,}")
-    print(f"Duplicados exactos:      {dup:,}")
     print(f"Colisiones SHA-1:        {col:,}")
     print(f"Tiempo total hashing:    {t:.3f} s")
     print(f"Throughput aproximado:   {total / t:,.0f} hashes/seg")
