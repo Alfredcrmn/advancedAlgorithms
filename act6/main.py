@@ -1,4 +1,5 @@
 from buildGraph import WeightedGraph
+from bfs import bfs
 
 graph = WeightedGraph(directed = False)
 
@@ -40,3 +41,18 @@ graph.add_edge('oriaron', 'ontdale', 219)
 graph.add_edge('ontdale', 'blebus', 165)
 graph.add_edge('blebus', 'togend', 121)
 graph.add_edge('ontdale', 'togend', 210)
+
+
+# Search from Goding to Niaphia
+
+start = 'goding'
+goal = 'niaphia'
+
+resultBfs = bfs(graph, start, goal)
+
+if resultBfs is not None:
+    print("BFS Path found:", resultBfs["Path"])
+    print("BFS Total cost:", resultBfs["Cost"])
+
+else:
+    print("No path found between", start, "and", goal)
