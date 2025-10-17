@@ -1,5 +1,5 @@
-from queue import Queue
 from buildGraph import WeightedGraph
+from queue import LifoQueue
 
 class TreeNode:
     def __init__(self,parent, v, c):
@@ -15,24 +15,20 @@ class TreeNode:
             node = node.parent
         return path
     
-def bfs(graph: WeightedGraph, v0, vg):
+def dfs(graph: WeightedGraph, v0, vg):
     """
-    This method finds a path in a graph from vertices v0 to vg using the
-    breadth-first search algorithm.
-    param graph: The graph to traverse.
-    param v0: The initial vertex.
-    param vg: The goal vertex.
-    return: A dictionary with the path from v0 to vg and its total cost,
-            or None if there is no path.
+    Finds a path in a graph from v0 to vg using Depth-First Search (DFS).
+    NOTE: DFS does not guarantee minimum cost or minimum number of edges.
+    return: {"Path": [...], "Cost": total_cost} or None if no path exists.
     """
 
-    # Check graph and vertices
     if v0 not in graph.vertices():
         print("Warning: Vertex", v0, "is not in Graph")
     if vg not in graph.vertices():
         print("Warning: Vertex", vg, "is not in Graph")
 
-    frontier = Queue()
+    
+    frontier = LifoQueue()
     frontier.put(TreeNode(None, v0, 0))
 
     explored_set = {}
@@ -44,14 +40,10 @@ def bfs(graph: WeightedGraph, v0, vg):
         node = frontier.get()
 
         if node.v == vg:
-            return {"Path": node.path(), "Cost": node.c}
+            return {"Path": node.path()}
         
         if node.v not in explored_set:
-            adjacent_vertices = graph.adjacent_vertices(node.v)
-            for vertex in adjacent_vertices:
-                neighbor = vertex[0]
-                weight = vertex[1]
+            for neighbor, w in graph.adjacent_vertices(node.v):
+                frontier.put(TreeNode(node, neighbor, node.c + w))
 
-                frontier.put(TreeNode(node, neighbor, node.c + weight))
-            
             explored_set[node.v] = 1
