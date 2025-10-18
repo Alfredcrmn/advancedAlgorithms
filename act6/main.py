@@ -2,6 +2,7 @@ from buildGraph import WeightedGraph
 from bfs import bfs
 from dfs import dfs
 from ucs import uniform_cost
+from dijkstra import dijkstra
 
 graph = WeightedGraph(directed = False)
 
@@ -205,4 +206,37 @@ if resultUcs is not None:
 else:
     print("No path found between", start, "and", goal)
 
-print("======================================================================")
+print("====================================================================== \n\n")
+
+
+
+
+
+# Dijkstra Algorithm from Goding
+print("----- Dijkstra Algorithm from Goding -----")
+
+source = 'goding'
+result = dijkstra(graph, source)
+
+dist = result["Distances"]
+parent = result["Parents"]
+
+print(f"\nCaminos óptimos desde {source} a cada nodo:")
+for target in graph.vertices():
+    # Reconstruir el camino source -> target
+    path = []
+    cur = target
+    # Si el nodo es inalcanzable, su distancia será inf y parent[cur] será None (excepto el propio source)
+    if dist.get(target, float("inf")) == float("inf"):
+        print(f"  {source:10s} -> {target:10s} : INALCANZABLE")
+        continue
+
+    while cur is not None:
+        path.insert(0, cur)
+        cur = parent[cur]
+
+    # Validar que el camino realmente inicia en 'source'
+    if not path or path[0] != source:
+        print(f"  {source:10s} -> {target:10s} : INALCANZABLE")
+    else:
+        print(f"  {source:10s} -> {target:10s} : {' -> '.join(path)}  |  Costo = {dist[target]}", "\n")

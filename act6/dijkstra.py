@@ -1,60 +1,39 @@
 from queue import PriorityQueue
 from buildGraph import WeightedGraph
 
-def _reconstruct_path(parent, start, goal):
-    path = []
-    cur = goal
-
-    while cur is not None:
-        path.insert(0, cur)
-        cur = parent.get(cur, None)
-
-    if len(path) == 0 or path[0] != start:
-        return None 
-    return path
-
-def dijkstra(graph: WeightedGraph, v0, vg):
+def dijkstra(graph: WeightedGraph, source):
     """
-    Finds a minimum-cost path from v0 to vg using Dijkstra.
-    Returns: {"Path": [...], "Cost": total_cost} or None if no path exists.
+    Computes single-source shortest paths (SSSP) from 'source' to all vertices.
     Assumes non-negative edge weights.
+    Returns:
+      {
+        "Distances": {v: dist_from_source},
+        "Parents":   {v: parent_of_v}
+      }
     """
-    # Verificaciones básicas (mismo estilo que el resto de tu código)
-    if v0 not in graph.vertices():
-        print("Warning: Vertex", v0, "is not in Graph")
-    if vg not in graph.vertices():
-        print("Warning: Vertex", vg, "is not in Graph")
+    if source not in graph.vertices():
+        print("Warning: Vertex", source, "is not in Graph")
 
     dist = {}
     parent = {}
-
     for v in graph.vertices():
         dist[v] = float("inf")
         parent[v] = None
-    dist[v0] = 0.0
+    dist[source] = 0.0
 
-    pq = PriorityQueue
+    pq = PriorityQueue()
     tie = 0
-    pq.put((0.0, tie, v0))
-
-    visited = {}
+    pq.put((0.0, tie, source))
 
     while True:
         if pq.empty():
-            return None
-        
+            break
+
         cur_cost, _, u = pq.get()
 
         if cur_cost > dist[u]:
             continue
 
-        if u not in visited:
-            visited[u] = 1
-
-        if u == vg:
-            path = _reconstruct_path(parent, v0, vg)
-            return {"Path": path, "Cost": dist[vg]}
-        
         for v, w in graph.adjacent_vertices(u):
             new_cost = dist[u] + w
             if new_cost < dist[v]:
@@ -62,3 +41,5 @@ def dijkstra(graph: WeightedGraph, v0, vg):
                 parent[v] = u
                 tie += 1
                 pq.put((new_cost, tie, v))
+
+    return {"Distances": dist, "Parents": parent}
