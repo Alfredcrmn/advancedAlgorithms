@@ -40,7 +40,7 @@ def dfs(graph: WeightedGraph, v0, vg):
         node = frontier.get()
 
         if node.v == vg:
-            return {"Path": node.path()}
+            return {"Path": node.path(), "Cost": node.c}
         
         if node.v not in explored_set:
             for neighbor, w in graph.adjacent_vertices(node.v):
