@@ -3,6 +3,8 @@ from bfs import bfs
 from dfs import dfs
 from ucs import uniform_cost
 from dijkstra import dijkstra
+from floyd import floyd_warshall_distance
+import numpy as np
 
 graph = WeightedGraph(directed = False)
 
@@ -240,3 +242,36 @@ for target in graph.vertices():
         print(f"  {source:10s} -> {target:10s} : INALCANZABLE")
     else:
         print(f"  {source:10s} -> {target:10s} : {' -> '.join(path)}  |  Costo = {dist[target]}", "\n")
+
+
+
+
+print("====================================================================== \n\n")
+print("----- Floyd-Warshall Algorithm from Goding -----")
+
+adjacency_matrix = [
+# goxmont zrusall niaphia adaset  ertonwell strento duron  lagos  oriaron blebus ylane goding ontdale togend
+[     0,     112,    212,    103,      0,       0,     0,     0,     0,     0,    0,     0,      0,     0], # goxmont
+[   112,       0,      0,     15,      0,     121,     0,     0,     0,     0,    0,     0,      0,     0], # zrusall
+[   212,       0,      0,      0,     56,       0,     0,   300,     0,     0,    0,     0,      0,     0], # niaphia
+[   103,      15,      0,      0,    130,       0,     0,     0,     0,     0,    0,     0,      0,     0], # adaset
+[     0,       0,     56,    130,      0,       0,   121,     0,     0,     0,    0,     0,      0,     0], # ertonwell
+[     0,     121,      0,      0,      0,       0,     0,     0,   221,     0,   99,     0,      0,     0], # strento
+[     0,       0,      0,      0,    121,       0,     0,   119,     0,   160,    0,     0,      0,     0], # duron
+[     0,       0,    300,      0,      0,       0,   119,     0,     0,     0,    0,     0,      0,     0], # lagos
+[     0,       0,      0,      0,      0,     221,     0,     0,     0,   291,  117,     0,    219,     0], # oriaron
+[     0,       0,      0,      0,      0,       0,   160,     0,   291,     0,    0,     0,    165,   121], # blebus
+[     0,       0,      0,      0,      0,      99,     0,     0,   117,     0,    0,    88,      0,     0], # ylane
+[     0,       0,      0,      0,      0,       0,     0,     0,     0,     0,   88,     0,     98,     0], # goding
+[     0,       0,      0,      0,      0,       0,     0,     0,   219,   165,    0,    98,      0,   210], # ontdale
+[     0,       0,      0,      0,      0,       0,     0,     0,     0,   121,    0,     0,    210,     0]  # togend
+]
+
+# Como el grafo es no dirigido, hacemos simétrica la matriz
+adjacency_matrix = np.maximum(adjacency_matrix, np.transpose(adjacency_matrix))
+
+
+dist_matrix = floyd_warshall_distance(adjacency_matrix)
+
+print("\n----- Floyd–Warshall (Minimum Distances Matrix) -----")
+print(np.round(dist_matrix, 1))
