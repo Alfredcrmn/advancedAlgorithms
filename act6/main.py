@@ -47,6 +47,33 @@ graph.add_edge('ontdale', 'blebus', 165)
 graph.add_edge('blebus', 'togend', 121)
 graph.add_edge('ontdale', 'togend', 210)
 
+def print_adjacency_list(adjacency_list):
+    print("\n----- Adjacency List -----")
+    for vertex, neighbors in adjacency_list.items():
+        
+        print(f"{vertex}: ", end="")
+        for neighbor, weight in neighbors:
+            print(f"({neighbor}, {weight})", end="  ")
+        print()
+
+adjacency_list = {
+    'goxmont': [('niaphia', 212), ('zrusall', 112), ('adaset', 103)],
+    'zrusall': [('goxmont', 112), ('adaset', 15), ('strento', 121)],
+    'niaphia': [('goxmont', 212), ('lagos', 300), ('ertonwell', 56)],
+    'adaset': [('goxmont', 103), ('zrusall', 15), ('ertonwell', 130)],
+    'ertonwell': [('niaphia', 56), ('lagos', 119), ('duron', 121), ('adaset', 130)],
+    'strento': [('zrusall', 121), ('oriaron', 221), ('ylane', 99)],
+    'duron': [('lagos', 119), ('ertonwell', 121), ('blebus', 160)],
+    'lagos': [('niaphia', 300), ('duron', 119)],
+    'oriaron': [('strento', 221), ('blebus', 291), ('ylane', 117), ('ontdale', 219)],
+    'blebus': [('oriaron', 291), ('duron', 160), ('ontdale', 165), ('togend', 121)],
+    'ylane': [('strento', 99), ('oriaron', 117), ('goding', 88)],
+    'goding': [('ylane', 88), ('ontdale', 98)],
+    'ontdale': [('goding', 98), ('oriaron', 219), ('blebus', 165), ('togend', 210)],
+    'togend': [('blebus', 121), ('ontdale', 210)]
+}
+print_adjacency_list(adjacency_list)
+print("\n")
 
 # Search from Goding to Niaphia
 print("======================================================================")
