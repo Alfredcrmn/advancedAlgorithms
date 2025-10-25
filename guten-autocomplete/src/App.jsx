@@ -1,3 +1,4 @@
+// src/App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
 import Reader from './pages/Reader'
@@ -25,7 +26,7 @@ export default function App() {
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/read/:id" element={<Reader />} />
+          <Route path="/read/:slug" element={<Reader />} />
         </Route>
 
         {/* alias opcional */}

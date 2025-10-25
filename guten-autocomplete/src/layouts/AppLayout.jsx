@@ -1,3 +1,4 @@
+// src/layouts/AppLayout.jsx
 import { Link, NavLink, Outlet } from 'react-router-dom'
 
 export default function AppLayout() {

@@ -1,3 +1,4 @@
+// src/components/LibraryCard.jsx
 export default function LibraryCard({ book }) {
   return (
     <a className="bookCard" href={`/read/${book.id}`} title={`${book.title} — ${book.author}`}>

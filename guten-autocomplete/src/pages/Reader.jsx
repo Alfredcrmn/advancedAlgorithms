@@ -1,69 +1,164 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+// src/pages/Reader.jsx
+import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import Sidebar from '../components/Sidebar/Sidebar'
+import Viewer from '../components/Viewer/Viewer'
 import manifest from '../data/books.manifest.json'
 
+// util super simple para paginar por tamaño aproximado de caracteres
+function paginateText(text, opts = {}) {
+  const targetChars = opts.targetChars ?? 1800
+  const tolerance  = opts.tolerance  ?? 200
+
+  const paras = text.replace(/\r/g, '').split(/\n{2,}/)
+  const pages = []
+  let buf = ''
+
+  for (const raw of paras) {
+    const p = raw.trim()
+    if (!p) continue
+
+    const candidate = buf ? buf + '\n\n' + p : p
+    if (candidate.length <= targetChars + tolerance) {
+      buf = candidate
+      continue
+    }
+
+    if (buf) {
+      pages.push(buf)
+      buf = ''
+    }
+
+    if (p.length > targetChars * 1.5) {
+      // partir por oraciones si el párrafo es larguísimo
+      const sentences = p.split(/(?<=[.!?])\s+/)
+      let temp = ''
+      for (const s of sentences) {
+        const cand = temp ? temp + ' ' + s : s
+        if (cand.length > targetChars + tolerance) {
+          if (temp) pages.push(temp.trim())
+          temp = s
+        } else {
+          temp = cand
+        }
+      }
+      if (temp) pages.push(temp.trim())
+    } else {
+      buf = p
+    }
+  }
+  if (buf) pages.push(buf)
+  return pages
+}
+
 export default function Reader() {
-  const { id } = useParams()
-  const book = useMemo(() => manifest.find(b => b.id === id), [id])
+  const { slug } = useParams()
+  const navigate = useNavigate()
 
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [stats, setStats] = useState({ chars: 0, words: 0 })
+  const [error, setError]     = useState('')
+  const [pages, setPages]     = useState([])
+  const [current, setCurrent] = useState(-1) // -1 = portada
+  const [showInfo, setShowInfo] = useState(false)
+  const [showSearch, setShowSearch] = useState(false) // placeholder
+
+  const bookMeta = useMemo(() => {
+    if (!manifest || !Array.isArray(manifest)) return null
+    return manifest.find(b => b.slug === slug) ?? null
+  }, [slug])
+
+  const base = import.meta.env.BASE_URL || '/';
+  const coverUrl = `${base}books/${slug}/cover.webp`;
+  const bookUrl  = `${base}books/${slug}/book.txt`;
 
   useEffect(() => {
-    let cancelled = false
+    let active = true
     async function load() {
-      if (!book) { setLoading(false); return }
       try {
-        const res = await fetch(book.textPath)
-        if (!res.ok) throw new Error(`No se pudo cargar el texto (${res.status})`)
+        setLoading(true)
+        setError('')
+        const res = await fetch(bookUrl)
+        if (!res.ok) throw new Error('No se pudo cargar el texto')
         const txt = await res.text()
-        if (cancelled) return
-        const chars = txt.length
-        const words = txt.trim().split(/\s+/).length
-        setStats({ chars, words })
+        const pgs = paginateText(txt)
+        if (!active) return
+        setPages(pgs)
+        setCurrent(-1) // siempre iniciar en portada
       } catch (e) {
-        setError(e.message || 'Error cargando el texto')
+        setError(String(e.message ?? e))
       } finally {
-        if (!cancelled) setLoading(false)
+        setLoading(false)
       }
     }
     load()
-    return () => { cancelled = true }
-  }, [book])
+    return () => { active = false }
+  }, [bookUrl])
 
-  if (!book) {
-    return (
-      <main style={{ padding: 24 }}>
-        <p>No se encontró el libro solicitado.</p>
-        <Link to="/">Volver</Link>
-      </main>
-    )
-  }
+  const onHome = useCallback(() => navigate('/'), [navigate])
+  const onToggleInfo = useCallback(() => setShowInfo(v => !v), [])
+  const onToggleSearch = useCallback(() => setShowSearch(v => !v), [])
+
+  // progreso de lectura (0-100)
+  const progress = useMemo(() => {
+    if (current < 0 || pages.length === 0) return 0
+    return Math.floor(((current + 1) / pages.length) * 100)
+  }, [current, pages.length])
 
   return (
-    <main className="readerShell">
-      <div className="readerHeader">
-        <div className="readerCover" style={{ backgroundImage: `url(${book.coverPath})` }} />
-        <div className="readerMeta">
-          <h1>{book.title}</h1>
-          <p style={{ opacity: 0.8 }}>{book.author}</p>
-          <p style={{ opacity: 0.7, marginTop: 6 }}>
-            {loading ? 'Cargando...' : error ? `Error: ${error}` : `~${stats.words.toLocaleString()} palabras • ${stats.chars.toLocaleString()} caracteres`}
-          </p>
-          <div style={{ marginTop: 12 }}>
-            <a href={book.textPath} target="_blank" rel="noreferrer" className="introCta">Ver texto crudo</a>{' '}
-            <Link to="/" className="introCta" style={{ background: '#2a3257', color: '#e7e9ee' }}>Volver</Link>
-          </div>
-        </div>
-      </div>
+    <div className="reader-shell">
+      <Sidebar
+        onHome={onHome}
+        onInfoToggle={onToggleInfo}
+        onSearchToggle={onToggleSearch}
+      />
 
-      {/* Placeholder del lector: aquí luego montamos paginación y búsqueda */}
-      <section className="readerStage">
-        <div className="stagePlaceholder">
-          <p>El e-reader se implementará aquí en los siguientes pasos: paginación, búsqueda exacta, y autocompletado.</p>
-        </div>
-      </section>
-    </main>
+      <div className="reader-stage">
+        <Viewer
+          loading={loading}
+          error={error}
+          coverUrl={coverUrl}
+          pages={pages}
+          currentPage={current}
+          setCurrentPage={setCurrent}
+        />
+
+        {/* Panel Info del libro */}
+        <aside className={`info-panel ${showInfo ? 'open' : ''}`}>
+          <div className="info-panel__header">
+            <h3>Book info</h3>
+            <button className="btn-ghost" onClick={onToggleInfo} aria-label="Close">×</button>
+          </div>
+
+          {bookMeta ? (
+            <div className="info-panel__body">
+              <p><strong>Title:</strong> {bookMeta.title}</p>
+              <p><strong>Author:</strong> {bookMeta.author}</p>
+              {bookMeta.year && <p><strong>Year:</strong> {bookMeta.year}</p>}
+              {bookMeta.language && <p><strong>Language:</strong> {bookMeta.language}</p>}
+              <hr />
+              <p><strong>Progress:</strong> {progress}%</p>
+              <p><strong>Pages:</strong> {pages.length}</p>
+            </div>
+          ) : (
+            <div className="info-panel__body">
+              <p>No metadata found for <code>{slug}</code>.</p>
+              <p>We can extend <code>src/data/books.manifest.json</code> later.</p>
+            </div>
+          )}
+        </aside>
+
+        {/* Placeholder de búsqueda in-app */}
+        <aside className={`search-panel ${showSearch ? 'open' : ''}`}>
+          <div className="info-panel__header">
+            <h3>Search</h3>
+            <button className="btn-ghost" onClick={onToggleSearch} aria-label="Close">×</button>
+          </div>
+          <div className="info-panel__body">
+            <p>Coming soon: búsqueda dentro del texto con tu índice.</p>
+          </div>
+        </aside>
+      </div>
+    </div>
   )
 }
+

@@ -1,3 +1,4 @@
+//src/pages/Home.jsx
 import manifest from '../data/books.manifest.json'
 import LibraryCard from '../components/LibraryCard'
 
@@ -15,7 +16,6 @@ export default function Home() {
             Search for any word or phrase across the entire collection and jump
             directly to its occurrences within the books.
           </p>
-          <a className="introCta" href="#library">Ver biblioteca</a>
         </section>
 
         <div id="library" className="cards">
