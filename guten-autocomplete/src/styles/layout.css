@@ -20,7 +20,7 @@
   grid-template-columns: repeat(5, minmax(0, 1fr));
   /* sin grid-auto-rows: la altura la define el contenido */
   gap: 20px;
-  padding: 28px clamp(16px, 4vw, 48px);
+  padding: 10px clamp(16px, 4vw, 48px);
   max-width: 100%;                   /* No crecer más que el viewport */
   margin: 0 auto;
   align-items: start;                 /* evita estirar celdas verticalmente */
@@ -38,7 +38,7 @@
   flex-direction: column;
   justify-content: center;
   box-shadow: 0 10px 30px rgba(0,0,0,.25);
-  height: 100%;
+  height: 99%;                            /* Ocupa casi toda la altura de la fila */
 }
 .introCard h1{
   margin: 0 0 8px;
