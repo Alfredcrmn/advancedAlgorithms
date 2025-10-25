@@ -11,11 +11,8 @@ import './styles/layout.css'
 import './styles/components.css'
 
 function ScrollToTop() {
-  // sube al inicio al cambiar de ruta
   const { pathname } = window.location
-  // no uses useLocation para evitar importar otro hook aquí;
-  // Vite recarga rápido y para SPA simple es suficiente:
-  // si prefieres, cámbialo por useLocation + useEffect.
+
   return null
 }
 
