@@ -23,7 +23,7 @@ export default function App() {
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/read/:slug" element={<Reader />} />
+          <Route path="/read/:id" element={<Reader />} />
         </Route>
 
         {/* alias opcional */}

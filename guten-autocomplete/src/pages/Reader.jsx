@@ -3,124 +3,84 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Sidebar from '../components/Sidebar/Sidebar'
 import Viewer from '../components/Viewer/Viewer'
+import SearchResults from '../components/Sidebar/SearchResults'
 import manifest from '../data/books.manifest.json'
+import { paginateByChars } from '../utils/pagination'
+import { useSearch } from '../state/useSearch'
+import '../styles/reader.css'
 
-// util super simple para paginar por tamaño aproximado de caracteres
-function paginateText(text, opts = {}) {
-  const targetChars = opts.targetChars ?? 1800
-  const tolerance  = opts.tolerance  ?? 200
-
-  const paras = text.replace(/\r/g, '').split(/\n{2,}/)
-  const pages = []
-  let buf = ''
-
-  for (const raw of paras) {
-    const p = raw.trim()
-    if (!p) continue
-
-    const candidate = buf ? buf + '\n\n' + p : p
-    if (candidate.length <= targetChars + tolerance) {
-      buf = candidate
-      continue
-    }
-
-    if (buf) {
-      pages.push(buf)
-      buf = ''
-    }
-
-    if (p.length > targetChars * 1.5) {
-      // partir por oraciones si el párrafo es larguísimo
-      const sentences = p.split(/(?<=[.!?])\s+/)
-      let temp = ''
-      for (const s of sentences) {
-        const cand = temp ? temp + ' ' + s : s
-        if (cand.length > targetChars + tolerance) {
-          if (temp) pages.push(temp.trim())
-          temp = s
-        } else {
-          temp = cand
-        }
-      }
-      if (temp) pages.push(temp.trim())
-    } else {
-      buf = p
-    }
-  }
-  if (buf) pages.push(buf)
-  return pages
+// Une BASE_URL con una ruta relativa
+function withBase(p) {
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '')
+  const path = String(p || '').replace(/^\/+/, '')
+  return `${base}/${path}`
 }
 
 export default function Reader() {
-  const { slug } = useParams()
+  const { id } = useParams()
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
   const [pages, setPages]     = useState([])
+  const [pageOffsets, setPageOffsets] = useState([])
+  const [rawText, setRawText] = useState('')
   const [current, setCurrent] = useState(-1) // -1 = portada
   const [showInfo, setShowInfo] = useState(false)
-  const [showSearch, setShowSearch] = useState(false) // placeholder
+  const [showSearch, setShowSearch] = useState(false)
+  const [query, setQuery] = useState('')
 
   const bookMeta = useMemo(() => {
     if (!manifest || !Array.isArray(manifest)) return null
-    return manifest.find(b => b.slug === slug) ?? null
-  }, [slug])
+    return manifest.find(b => b.id === id) ?? null
+  }, [id])
 
-  const base = import.meta.env.BASE_URL || '/'
-  const coverUrl = `${base}books/${slug}/cover.webp`
-  const bookUrl  = `${base}books/${slug}/book.txt`
+  const coverUrl = bookMeta ? withBase(bookMeta.coverPath) : ''
+  const bookUrl  = bookMeta ? withBase(bookMeta.textPath)  : ''
 
   useEffect(() => {
     let active = true
     async function load() {
       try {
-        setLoading(true)
-        setError('')
+        setLoading(true); setError('')
+        if (!bookMeta) throw new Error('Libro no encontrado en el manifiesto')
         const res = await fetch(bookUrl)
         if (!res.ok) throw new Error('No se pudo cargar el texto')
         const txt = await res.text()
-        const pgs = paginateText(txt)
+        const { pages: pgs, pageOffsets: offs } = paginateByChars(txt)
         if (!active) return
+        setRawText(txt)
         setPages(pgs)
-        setCurrent(-1) // siempre iniciar en portada
+        setPageOffsets(offs)
+        setCurrent(-1) // portada
       } catch (e) {
         setError(String(e.message ?? e))
       } finally {
         setLoading(false)
       }
     }
-    load()
+    if (bookMeta) load()
     return () => { active = false }
-  }, [bookUrl])
+  }, [bookMeta, bookUrl])
 
   const onHome = useCallback(() => navigate('/'), [navigate])
   const onToggleInfo = useCallback(() => setShowInfo(v => !v), [])
   const onToggleSearch = useCallback(() => setShowSearch(v => !v), [])
 
-  // estado de navegación
+  // Navegación
   const atCover   = current < 0
   const atLast    = pages.length > 0 && current === pages.length - 1
   const canGoPrev = !atCover
   const canGoNext = atCover || !atLast
 
   const goPrev = useCallback(() => {
-    setCurrent(p => {
-      if (p < 0) return p
-      if (p === 0) return -1
-      return p - 1
-    })
+    setCurrent(p => (p < 0 ? p : p === 0 ? -1 : p - 1))
   }, [])
-
   const goNext = useCallback(() => {
-    setCurrent(p => {
-      if (p < 0 && pages.length > 0) return 0
-      if (p >= pages.length - 1) return p
-      return p + 1
-    })
+    setCurrent(p => (p < 0 && pages.length > 0 ? 0 : p >= pages.length - 1 ? p : p + 1))
   }, [pages.length])
 
-  // teclas ← / →
+  // Teclas ← / →
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'ArrowLeft')  { e.preventDefault(); if (canGoPrev) goPrev() }
@@ -130,11 +90,24 @@ export default function Reader() {
     return () => window.removeEventListener('keydown', onKey)
   }, [canGoPrev, canGoNext, goPrev, goNext])
 
-  // progreso de lectura (0-100)
+  // Progreso %
   const progress = useMemo(() => {
     if (current < 0 || pages.length === 0) return 0
     return Math.floor(((current + 1) / pages.length) * 100)
   }, [current, pages.length])
+
+  // Búsqueda exacta MVP
+  const { results, elapsedMs, running } = useSearch(rawText, pageOffsets, query)
+
+  // (opcional) si no existe el libro y ya no carga
+  if (!bookMeta && !loading) {
+    return (
+      <main style={{ padding: 24 }}>
+        <p>No se encontró el libro solicitado (<code>{id}</code>).</p>
+        <button onClick={() => navigate('/')}>Volver</button>
+      </main>
+    )
+  }
 
   return (
     <div className="reader-shell">
@@ -187,8 +160,8 @@ export default function Reader() {
           )}
         </div>
 
-        {/* Panel Info del libro */}
-        <aside className={`info-panel ${showInfo ? 'open' : ''}`}>
+        {/* Panel Info */}
+        <aside className={`info-panel ${showInfo ? 'open' : ''}`} aria-hidden={!showInfo}>
           <div className="info-panel__header">
             <h3>Book info</h3>
             <button className="btn-ghost" onClick={onToggleInfo} aria-label="Close">×</button>
@@ -206,23 +179,38 @@ export default function Reader() {
             </div>
           ) : (
             <div className="info-panel__body">
-              <p>No metadata found for <code>{slug}</code>.</p>
+              <p>No metadata found for <code>{id}</code>.</p>
               <p>We can extend <code>src/data/books.manifest.json</code> later.</p>
             </div>
           )}
         </aside>
 
-        {/* Placeholder de búsqueda in-app */}
-        <aside className={`search-panel ${showSearch ? 'open' : ''}`}>
+        {/* Panel Search */}
+        <aside className={`search-panel ${showSearch ? 'open' : ''}`} aria-hidden={!showSearch}>
           <div className="info-panel__header">
             <h3>Search</h3>
             <button className="btn-ghost" onClick={onToggleSearch} aria-label="Close">×</button>
           </div>
           <div className="info-panel__body">
-            <p>Coming soon: búsqueda dentro del texto con tu índice.</p>
+            <input
+              type="search"
+              placeholder="Buscar palabra o frase…"
+              value={query}
+              onChange={(e)=> setQuery(e.target.value)}
+              className="input"
+              autoFocus={showSearch}
+            />
+            <SearchResults
+              query={query}
+              running={running}
+              elapsedMs={elapsedMs}
+              results={results}
+              onSelect={(r) => { setCurrent(r.pageIndex); setShowSearch(false); }}
+            />
           </div>
         </aside>
       </div>
     </div>
   )
 }
+
