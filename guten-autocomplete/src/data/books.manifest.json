@@ -1,0 +1,82 @@
+[
+  {
+    "id": "frankenstein",
+    "title": "Frankenstein; Or, The Modern Prometheus",
+    "author": "Mary Wollstonecraft Shelley",
+    "language": "en",
+    "source": "Project Gutenberg",
+    "textPath": "/books/frankenstein/book.txt",
+    "coverPath": "/books/frankenstein/cover.webp",
+    "indexPath": "/books/frankenstein/book.index.json"
+  },
+  {
+    "id": "moby-dick",
+    "title": "Moby Dick; Or, The Whale",
+    "author": "Herman Melville",
+    "language": "en",
+    "source": "Project Gutenberg",
+    "textPath": "/books/moby-dick/book.txt",
+    "coverPath": "/books/moby-dick/cover.webp",
+    "indexPath": "/books/moby-dick/book.index.json"
+  },
+  {
+    "id": "romeo-and-juliet",
+    "title": "Romeo and Juliet",
+    "author": "William Shakespeare",
+    "language": "en",
+    "source": "Project Gutenberg",
+    "textPath": "/books/romeo-and-juliet/book.txt",
+    "coverPath": "/books/romeo-and-juliet/cover.webp",
+    "indexPath": "/books/romeo-and-juliet/book.index.json"
+  },
+  {
+    "id": "pride-and-prejudice",
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "language": "en",
+    "source": "Project Gutenberg",
+    "textPath": "/books/pride-and-prejudice/book.txt",
+    "coverPath": "/books/pride-and-prejudice/cover.webp",
+    "indexPath": "/books/pride-and-prejudice/book.index.json"
+  },
+  {
+    "id": "alice-in-wonderland",
+    "title": "Alice's Adventures in Wonderland",
+    "author": "Lewis Carroll",
+    "language": "en",
+    "source": "Project Gutenberg",
+    "textPath": "/books/alice-in-wonderland/book.txt",
+    "coverPath": "/books/alice-in-wonderland/cover.webp",
+    "indexPath": "/books/alice-in-wonderland/book.index.json"
+  },
+  {
+    "id": "dr-jekyll-and-mr-hyde",
+    "title": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "author": "Robert Louis Stevenson",
+    "language": "en",
+    "source": "Project Gutenberg",
+    "textPath": "/books/dr-jekyll-and-mr-hyde/book.txt",
+    "coverPath": "/books/dr-jekyll-and-mr-hyde/cover.webp",
+    "indexPath": "/books/dr-jekyll-and-mr-hyde/book.index.json"
+  },
+  {
+    "id": "a-room-with-a-view",
+    "title": "A Room with a View",
+    "author": "E. M. Forster",
+    "language": "en",
+    "source": "Project Gutenberg",
+    "textPath": "/books/a-room-with-a-view/book.txt",
+    "coverPath": "/books/a-room-with-a-view/cover.webp",
+    "indexPath": "/books/a-room-with-a-view/book.index.json"
+  },
+  {
+    "id": "middlemarch",
+    "title": "Middlemarch",
+    "author": "George Eliot",
+    "language": "en",
+    "source": "Project Gutenberg",
+    "textPath": "/books/middlemarch/book.txt",
+    "coverPath": "/books/middlemarch/cover.webp",
+    "indexPath": "/books/middlemarch/book.index.json"
+  }
+]
