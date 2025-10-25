@@ -67,9 +67,9 @@ export default function Reader() {
     return manifest.find(b => b.slug === slug) ?? null
   }, [slug])
 
-  const base = import.meta.env.BASE_URL || '/';
-  const coverUrl = `${base}books/${slug}/cover.webp`;
-  const bookUrl  = `${base}books/${slug}/book.txt`;
+  const base = import.meta.env.BASE_URL || '/'
+  const coverUrl = `${base}books/${slug}/cover.webp`
+  const bookUrl  = `${base}books/${slug}/book.txt`
 
   useEffect(() => {
     let active = true
@@ -98,6 +98,38 @@ export default function Reader() {
   const onToggleInfo = useCallback(() => setShowInfo(v => !v), [])
   const onToggleSearch = useCallback(() => setShowSearch(v => !v), [])
 
+  // estado de navegación
+  const atCover   = current < 0
+  const atLast    = pages.length > 0 && current === pages.length - 1
+  const canGoPrev = !atCover
+  const canGoNext = atCover || !atLast
+
+  const goPrev = useCallback(() => {
+    setCurrent(p => {
+      if (p < 0) return p
+      if (p === 0) return -1
+      return p - 1
+    })
+  }, [])
+
+  const goNext = useCallback(() => {
+    setCurrent(p => {
+      if (p < 0 && pages.length > 0) return 0
+      if (p >= pages.length - 1) return p
+      return p + 1
+    })
+  }, [pages.length])
+
+  // teclas ← / →
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); if (canGoPrev) goPrev() }
+      if (e.key === 'ArrowRight') { e.preventDefault(); if (canGoNext) goNext() }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [canGoPrev, canGoNext, goPrev, goNext])
+
   // progreso de lectura (0-100)
   const progress = useMemo(() => {
     if (current < 0 || pages.length === 0) return 0
@@ -112,7 +144,24 @@ export default function Reader() {
         onSearchToggle={onToggleSearch}
       />
 
-      <div className="reader-stage">
+      {/* TRES COLUMNAS: prev | libro | next */}
+      <div className="reader-stage three-cols">
+        <div
+          className="nav-rail nav-rail--left"
+          onClick={canGoPrev ? goPrev : undefined}
+          aria-hidden={!canGoPrev}
+        >
+          {canGoPrev && (
+            <button
+              className="nav-rail__btn"
+              onClick={(e)=>{e.stopPropagation(); goPrev()}}
+              aria-label="Página anterior"
+            >
+              ‹
+            </button>
+          )}
+        </div>
+
         <Viewer
           loading={loading}
           error={error}
@@ -121,6 +170,22 @@ export default function Reader() {
           currentPage={current}
           setCurrentPage={setCurrent}
         />
+
+        <div
+          className="nav-rail nav-rail--right"
+          onClick={canGoNext ? goNext : undefined}
+          aria-hidden={!canGoNext}
+        >
+          {canGoNext && (
+            <button
+              className="nav-rail__btn"
+              onClick={(e)=>{e.stopPropagation(); goNext()}}
+              aria-label="Página siguiente"
+            >
+              ›
+            </button>
+          )}
+        </div>
 
         {/* Panel Info del libro */}
         <aside className={`info-panel ${showInfo ? 'open' : ''}`}>
@@ -161,4 +226,3 @@ export default function Reader() {
     </div>
   )
 }
-
